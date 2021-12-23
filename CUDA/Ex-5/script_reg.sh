@@ -9,6 +9,6 @@
 
 lscpu
 
-srun -n8 --cpu-bind=map_cpu:2,4,6,8,10,12,14,16 ./vec_add
+srun -n8 --cpu-bind=cores ./vec_add
 
 
