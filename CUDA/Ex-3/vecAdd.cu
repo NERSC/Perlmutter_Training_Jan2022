@@ -29,6 +29,15 @@ void gpu_pci_id(char* device_id, int device_num){
     int len=15;
     cudaDeviceGetPCIBusId(device_id, len, device_num);
 }
+void set_my_device(int my_device){
+    ERRCHECK(cudaSetDevice(my_device));
+}
+int get_current_device(){
+    int my_device = -1;
+    ERRCHECK(cudaGetDevice(&my_device));
+
+    return my_device;
+}
 
 // CUDA kernel. Each thread takes care of one element of c
 __global__ void vecAdd(double *a, double *b, double *c, int n)
@@ -83,7 +92,7 @@ int main( int argc, char* argv[] )
 {
     int myid, namelen, world_size;
     char myname[MPI_MAX_PROCESSOR_NAME];
-
+    double final_result = 0;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Get_processor_name(myname, &namelen);
@@ -105,8 +114,12 @@ int main( int argc, char* argv[] )
     }
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Finalize();
+    //setting device for current GPU
+    set_my_device(my_gpu);
+    int curr_device = get_current_device();
+    if(my_gpu != curr_device){
+        fprintf(stderr, "********Device was not set properly for some ranks*******\n");
+    }
     // Size of vectors
     int n = VECSIZE;
  
@@ -136,13 +149,30 @@ int main( int argc, char* argv[] )
     double sum = 0;
     for(i=0; i<n; i++)
         sum += h_c[i];
-    printf("final result: %f\n", sum/(double)n);
- 
+    sum /=n;
+    
+    
+    double global_sum = 0;
+
+    MPI_Reduce(&sum, &global_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // Release host memory
     delete[] h_a;
     delete[] h_b;
     delete[] h_c;
 
+    if(myid == 0)
+        final_result = global_sum/(double)world_size;
+
+    MPI_Finalize();
+    
+    if(myid == 0){
+        if(final_result > 1.0){
+            fprintf(stderr, "*****Result is incorrect, something went wrong, program will be terminated*****\n");
+            exit(-1);
+        }
+        fprintf(stdout,"****final result: %f ******\n", final_result);
+    }
     return 0;
 }

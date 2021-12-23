@@ -13,13 +13,13 @@ int main( int argc, char* argv[] )
 {
     int myid, namelen, world_size;
     char myname[MPI_MAX_PROCESSOR_NAME];
-
+    double final_result = 0;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Get_processor_name(myname, &namelen);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    // fprintf(stdout, "Hello from %s, rank = %d out of %d \n", myname, myid, world_size);
+    // fprintf(stdout, "Hello from processor %s, rank = %d out of %d processors" "\n", myname, myid, world_size);
     int ngpu = find_gpus();
     int my_gpu = myid%ngpu;
     char my_gpu_id[15];
@@ -35,8 +35,12 @@ int main( int argc, char* argv[] )
     }
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Finalize();
+    //setting device for current GPU
+    set_my_device(my_gpu);
+    int curr_device = get_current_device();
+    if(my_gpu != curr_device){
+        fprintf(stderr, "********Device was not set properly for some ranks*******\n");
+    }
     // Size of vectors
     int n = VECSIZE;
  
@@ -66,13 +70,30 @@ int main( int argc, char* argv[] )
     double sum = 0;
     for(i=0; i<n; i++)
         sum += h_c[i];
-    printf("final result: %f\n", sum/(double)n);
- 
+    sum /=n;
+    
+    
+    double global_sum = 0;
+
+    MPI_Reduce(&sum, &global_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // Release host memory
     delete[] h_a;
     delete[] h_b;
     delete[] h_c;
 
+    if(myid == 0)
+        final_result = global_sum/(double)world_size;
+
+    MPI_Finalize();
+    
+    if(myid == 0){
+        if(final_result > 1.0){
+            fprintf(stderr, "*****Result is incorrect, something went wrong, program will be terminated*****\n");
+            exit(-1);
+        }
+        fprintf(stdout,"****final result: %f ******\n", final_result);
+    }
     return 0;
 }
