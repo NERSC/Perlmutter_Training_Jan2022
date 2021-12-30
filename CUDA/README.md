@@ -136,4 +136,35 @@ Other 3 GPUs are:
 ```
 
  ## Exercise 5: CUDA +MPI, GPU affinity example.
+ Most applications assign one MPI rank per GPU and most of the time it is done using round robin method without considering physical location of the CPU core where the MPI rank is residing with respect to the location of the GPU. In this exercise we will use a simple slurm flag to bind MPI ranks to the GPU located closest to the NUMA region where the MPI rank was scheduled. For this we will use the same code as in Exercise 4 but run it in a different manner. 
  
+ First make sure that you have `cudatoolkit` and a `PrgEnv-xx` loaded. Then use the below steps to build the code:
+ 
+ ```bash
+ cd Ex-5
+ make
+ ```
+ 
+ and then to run the example with regular GPU binding, run with:
+ 
+ ```bash
+srun -n8 --cpu-bind=cores ./vec_add
+```
+The above will bind MPI ranks to cores and each MPI rank will have all the GPUs visible. In such a scenerio it is not possible to determine the closest GPUs to any of the MPI ranks (cores) hence assignment is in round robin way. The output from above run command can be inspected to see cores to GPU mappings:
+
+```bash
+```
+
+In order to bind the MPI ranks to the GPUs located closest to the corresponding core (NUMA region), we use the `--gpu-bind=closest` flag, other options for `--gpu-bind` can also be considered to suite each application's need. Rerun the same example using the `--gpu-bind=closest` flag:
+
+```bash
+srun -n8 --cpu-bind=cores --gpu-bind=closest ./vec_add
+```
+
+and inspect the output as shown below:
+
+```bash
+```
+To view the NUMA regions on current node, use `lscpu | grep NUMA` and observe from the above output that cores in the same NUMA region always view the same GPU. It must be noted that when `--gpu-bind=closest` is used only the closest GPUs are visible to MPI ranks. 
+
+You can also use the sbatch scripts `script_reg.sh` and `script_close.sh` to run the examples without and with GPU bindings. These scripts are located in the same folder (`Ex-5`). 
