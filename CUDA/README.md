@@ -153,6 +153,49 @@ srun -n8 --cpu-bind=cores ./vec_add
 The above will bind MPI ranks to cores and each MPI rank will have all the GPUs visible. In such a scenerio it is not possible to determine the closest GPUs to any of the MPI ranks (cores) hence assignment is in round robin way. The output from above run command can be inspected to see cores to GPU mappings:
 
 ```bash
+Rank 1/8 (PID:73658 on Core: 16) from nid003497 sees 4 GPUs, GPU assigned to me is: = 0000:41:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 2: 0000:81:00.0 **
+**rank = 3: 0000:C1:00.0 **
+Rank 5/8 (PID:73662 on Core: 17) from nid003497 sees 4 GPUs, GPU assigned to me is: = 0000:41:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 2: 0000:81:00.0 **
+**rank = 3: 0000:C1:00.0 **
+Rank 0/8 (PID:73657 on Core: 0) from nid003497 sees 4 GPUs, GPU assigned to me is: = 0000:03:00.0
+Other 3 GPUs are:
+**rank = 1: 0000:41:00.0 **
+**rank = 2: 0000:81:00.0 **
+**rank = 3: 0000:C1:00.0 **
+Rank 2/8 (PID:73659 on Core: 32) from nid003497 sees 4 GPUs, GPU assigned to me is: = 0000:81:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 1: 0000:41:00.0 **
+**rank = 3: 0000:C1:00.0 **
+Rank 3/8 (PID:73660 on Core: 48) from nid003497 sees 4 GPUs, GPU assigned to me is: = 0000:C1:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 1: 0000:41:00.0 **
+**rank = 2: 0000:81:00.0 **
+Rank 6/8 (PID:73663 on Core: 33) from nid003497 sees 4 GPUs, GPU assigned to me is: = 0000:81:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 1: 0000:41:00.0 **
+**rank = 3: 0000:C1:00.0 **
+Rank 7/8 (PID:73664 on Core: 49) from nid003497 sees 4 GPUs, GPU assigned to me is: = 0000:C1:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 1: 0000:41:00.0 **
+**rank = 2: 0000:81:00.0 **
+Rank 4/8 (PID:73661 on Core: 1) from nid003497 sees 4 GPUs, GPU assigned to me is: = 0000:03:00.0
+Other 3 GPUs are:
+**rank = 1: 0000:41:00.0 **
+**rank = 2: 0000:81:00.0 **
+**rank = 3: 0000:C1:00.0 **
+
+
+****final result: 1.000000 ******
 ```
 
 In order to bind the MPI ranks to the GPUs located closest to the corresponding core (NUMA region), we use the `--gpu-bind=closest` flag, other options for `--gpu-bind` can also be considered to suite each application's need. Rerun the same example using the `--gpu-bind=closest` flag:
@@ -164,6 +207,30 @@ srun -n8 --cpu-bind=cores --gpu-bind=closest ./vec_add
 and inspect the output as shown below:
 
 ```bash
+NUMA node(s):        4
+NUMA node0 CPU(s):   0-15,64-79
+NUMA node1 CPU(s):   16-31,80-95
+NUMA node2 CPU(s):   32-47,96-111
+NUMA node3 CPU(s):   48-63,112-127
+
+
+Rank 1/8 (PID:74002 on Core: 16) from nid003497 sees 1 GPUs, GPU assigned to me is: = 0000:81:00.0
+Other 0 GPUs are:
+Rank 3/8 (PID:74004 on Core: 48) from nid003497 sees 1 GPUs, GPU assigned to me is: = 0000:03:00.0
+Other 0 GPUs are:
+Rank 5/8 (PID:74006 on Core: 17) from nid003497 sees 1 GPUs, GPU assigned to me is: = 0000:81:00.0
+Other 0 GPUs are:
+Rank 7/8 (PID:74008 on Core: 49) from nid003497 sees 1 GPUs, GPU assigned to me is: = 0000:03:00.0
+Other 0 GPUs are:
+Rank 0/8 (PID:74001 on Core: 0) from nid003497 sees 1 GPUs, GPU assigned to me is: = 0000:C1:00.0
+Other 0 GPUs are:
+Rank 4/8 (PID:74005 on Core: 1) from nid003497 sees 1 GPUs, GPU assigned to me is: = 0000:C1:00.0
+Other 0 GPUs are:
+Rank 6/8 (PID:74007 on Core: 33) from nid003497 sees 1 GPUs, GPU assigned to me is: = 0000:41:00.0
+Other 0 GPUs are:
+Rank 2/8 (PID:74003 on Core: 32) from nid003497 sees 1 GPUs, GPU assigned to me is: = 0000:41:00.0
+
+****final result: 1.000000 ******
 ```
 To view the NUMA regions on current node, use `lscpu | grep NUMA` and observe from the above output that cores in the same NUMA region always view the same GPU. It must be noted that when `--gpu-bind=closest` is used only the closest GPUs are visible to MPI ranks. 
 
