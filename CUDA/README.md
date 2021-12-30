@@ -47,7 +47,7 @@ In this example we take the simple CUDA C++ code from Exercise 1 and add the usa
 
 Each rank first checks for all the devices visible to it and then assigns itself one of the devices, PCI addresses of all the devices visible to all the ranks are printed out. This is to help understand rank to GPU bindings that are studied in next exercises.
 
-Just like the first exercise, all the code is located in the same file i.e. `vecAdd.cu`. Keeping the file extension as `cu` makes it recgonizable as CUDA containing file by the NVIDIA programming environment and causes it to link `cudart` library simplifying things. When using `PrgEnv-nvidia` the `CC` wrapper by default links in the MPI implementation built for `PrgEnv-nvidia`
+Just like the first exercise, all the code is located in the same file i.e. `vecAdd.cu`. Keeping the file extension as `cu` makes it recgonizable as CUDA containing file by the NVIDIA programming environment and causes it to link `cudart` library simplifying things. When using `PrgEnv-nvidia` the `CC` wrapper by default links in the MPI implementation built for `PrgEnv-nvidia`.
 
 To build and test this example first make sure that `PrgEnv-nvidia` module has been loaded, then follow the steps below:
 
@@ -55,6 +55,7 @@ To build and test this example first make sure that `PrgEnv-nvidia` module has b
 cd Ex-3
 make
 ```
+It must be noted that in line 5 of `Makefile`, flag `-gpu=cc80` is being passed to `CC`, that is to esnure that CUDA code is built for the devices of compute capability 8.0.
 
 To run:
 
@@ -87,3 +88,52 @@ Other 3 GPUs are:
 
 ****final result: 1.000000 ******
 ```
+
+ ## Exercise 4: Simple CUDA + MPI C++ program, separate compilation.
+ Just as described in Exercise 2, users may need to use different compilers for their device code and the main application. When we have MPI in the mix, users can use the MPI build of their choice by loading the correct programming environment and then using the corresponding `CC` wrapper to build the main app and then link with the separately compiled CUDA code. 
+ 
+ In this exercise, we use the same example from previous exercise but breakdown the code in separate files such that all the CUDA code is in a separate file i.e. `kernels.cu` and it is being called by the main app in `vecAdd.cpp` using the header `kernels.h`. It can be observed in the `Makefile` that CUDA code is built using the `nvcc` compiler and then linked using the MPI build of choice. It is important to link `cudart` library to ensure that all the CUDA API references are available. 
+ 
+ Users can try loading different programming environments i.e. `PrgEnv-nvidia`, `PrgEnv-gnu` and test the sample code by following the below instructions. Make sure that you have the module `cudatoolkit` loaded as that is needed to find the path for `cudart` library.
+ 
+ To build:
+ 
+ ```bash
+ cd Ex-4
+ make
+ ```
+ 
+ To run:
+ ```bash
+ srun -n4 ./vec_add
+ ```
+ 
+ Expected output:
+ 
+```bash
+Rank 3/4 from nid002457 sees 4 GPUs, GPU assigned to me is: = 0000:C1:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 1: 0000:41:00.0 **
+**rank = 2: 0000:81:00.0 **
+Rank 1/4 from nid002457 sees 4 GPUs, GPU assigned to me is: = 0000:41:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 2: 0000:81:00.0 **
+**rank = 3: 0000:C1:00.0 **
+Rank 2/4 from nid002457 sees 4 GPUs, GPU assigned to me is: = 0000:81:00.0
+Other 3 GPUs are:
+**rank = 0: 0000:03:00.0 **
+**rank = 1: 0000:41:00.0 **
+**rank = 3: 0000:C1:00.0 **
+Rank 0/4 from nid002457 sees 4 GPUs, GPU assigned to me is: = 0000:03:00.0
+Other 3 GPUs are:
+**rank = 1: 0000:41:00.0 **
+**rank = 2: 0000:81:00.0 **
+**rank = 3: 0000:C1:00.0 **
+
+****final result: 1.000000 ******
+```
+
+ ## Exercise 5: CUDA +MPI, GPU affinity example.
+ 
