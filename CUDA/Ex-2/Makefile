@@ -5,5 +5,5 @@ vec_add: kernels.o kernels.h vecAdd.cpp
 kernels.o: kernels.cu kernels.h
 	nvcc $(NVCCFLAGS) -c kernels.cu -o $@
 clean:
-	rm kernels.o vec_add
+	rm *.o vec_add
 

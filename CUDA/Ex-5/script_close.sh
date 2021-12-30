@@ -8,7 +8,7 @@
 #SBATCH -A m3902_g
 #SBATCH --exclusive
 
-lscpu
-
+lscpu | grep NUMA
+echo -e "\n"
 srun -n8 --cpu-bind=cores --gpu-bind=closest ./vec_add
 

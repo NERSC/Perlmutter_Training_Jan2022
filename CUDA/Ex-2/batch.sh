@@ -5,4 +5,4 @@
 #SBATCH -t 5
 #SBATCH -A m3902_g
 
-srun -n4 ./vec_add
+./vec_add
