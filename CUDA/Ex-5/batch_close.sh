@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=8
 #SBATCH --cpus-per-task=2
 #SBATCH -A ntrain3_g
-#SBATCH --reservation=perlmutter_day1
+##SBATCH --reservation=perlmutter_day1
 
 lscpu | grep NUMA
 echo -e "\n"
