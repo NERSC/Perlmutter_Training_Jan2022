@@ -1,4 +1,4 @@
-# OpenMP C++
+# OpenMP / OpenACC C++
 This directory contains examples for building and running OpenMP/OpenACC C++ codes on Perlmutter using the `nvhpc` compiler. 
 The exercises also cover linking with MPI libraries as well as performing rank to device mappings on a simple code example.
 
