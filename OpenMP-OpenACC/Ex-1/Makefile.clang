@@ -1,0 +1,32 @@
+SHELL = /bin/sh
+
+#==========================
+# Files
+#==========================
+EXE = vec_add.ex
+SRC = *.cpp
+
+CXX = clang++
+
+CXXFLAGS += -O3 -fopenmp
+CXXFLAGS += -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA_HOME} -I${CUDA_HOME}/include -ffp-contract=fast
+CXXFLAGS += -Xopenmp-target -march=sm_80
+
+#==========================
+# Compiler commands
+#==========================
+CXXLD         = $(CXX)
+
+#==========================
+# Make the executable
+#==========================
+$(EXE): $(SRC)
+	echo $(SRC)
+	$(CXXLD) $(CXXFLAGS) $(SRC) -o $(EXE)
+
+#==========================
+#remove all objs
+#==========================
+clean:
+	/bin/rm -f *.o $(EXE)
+
