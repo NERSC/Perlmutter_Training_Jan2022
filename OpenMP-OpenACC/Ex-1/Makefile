@@ -13,7 +13,7 @@ OPENACC:=n
 CXXFLAGS += -O3 
 
 ifeq ($(OPENMP),y)
-CXXFLAGS += -mp=gpu -gpu=cc80
+CXXFLAGS += -mp=gpu -gpu=cc80 -Minfo
 EXE = vec_add.openmp
 else ifeq ($(OPENACC),y)
 CXXFLAGS += -acc -Minfo=accel
