@@ -13,7 +13,7 @@ OPENACC:=n
 CXXFLAGS += -O3 
 
 ifeq ($(OPENMP),y)
-CXXFLAGS += -mp=gpu -gpu=cc80
+CXXFLAGS += -mp=gpu -gpu=cc80 -Minfo
 EXE = vec_add.openmp
 else ifeq ($(OPENACC),y)
 CXXFLAGS += -acc -Minfo=accel
@@ -39,4 +39,4 @@ $(EXE): $(SRC)
 #remove all objs
 #==========================
 clean:
-	/bin/rm -f *.o $(EXE)
+	/bin/rm -f *.o vec_add.seq vec_add.openmp vec_add.openacc
