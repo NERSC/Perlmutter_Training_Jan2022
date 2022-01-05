@@ -10,7 +10,9 @@ The examples in this section mirror the CUDA examples but in OpenMP and OpenACC 
 Each example has a Makefile which builds the sequential version by default. 
 To build the OpenMP/OpenACC versions use the following build command: 
 ``` console
+make clean OPENMP=y 
 make OPENMP=y 
 or
+make clean OPENACC=y
 make OPENACC=y
 ```

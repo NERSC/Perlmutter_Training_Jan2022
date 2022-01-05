@@ -1,7 +1,10 @@
 # CUDA C++
 This directory contains examples for building and running basic CUDA C++ codes on Perlmutter using different compilers. The exercises also cover linking with MPI libraries as well as performing rank to device mappings on a simple code example.
 
-All the examples contain a `batch.sh` in their respective directories that should be used for running the examples through batch submission. Otherwise the run steps mentioned in the examples below can be used directly on interactive allocations. 
+All the examples contain a `batch.sh` in their respective directories that should be used for running the examples through batch submission. Otherwise the run steps mentioned in the examples below can be used directly on interactive allocations. Comment out the following line when doing exercises outside of the reservation window of 9:30-12:30, Jan 5 2022.
+```bash 
+#SBATCH --reservation=perlmutter_day1
+```
 
 ## Exercise 1: Simple CUDA C++ program
 Most of the times CUDA kernels and code containing CUDA API calls are placed in a file with extension `.cu `. The `nvcc` compiler provided with CUDAtoolkit can by default recognize `.cu` files as containing CUDA code and can link in the required libraries while also compiling the host side code with a host compiler.
@@ -11,13 +14,19 @@ It must be noted that to build this example `nvcc` is being passed a `-arch=sm_8
 
 ```bash
 cd Ex-1
+make clean
 make
 ```
 To run:
 
 ```bash
+sbatch batch.sh
+```
+which contains
+```
 ./vec_add
 ```
+
 The output should look like:
 ```bash
 final result: 1.000000
@@ -30,12 +39,19 @@ To build this example make sure that module `cudatoolkit`is loaded and `g++` is 
  
  ```bash
  cd Ex-2
+ module load cudatoolkit
+ module load gcc
+ make clean
  make
  ```
  
  To run this:
  
  ```bash
+ sbatch batch.sh
+ ```
+ which contains
+ ```
  ./vec_add
  ```
  
@@ -54,7 +70,15 @@ Just like the first exercise, all the code is located in the same file i.e. `vec
 To build and test this example first make sure that `PrgEnv-nvidia` module has been loaded, then follow the steps below:
 
 ```bash
+# revert to default nvidia env if loaded cudatoolkit, gcc or PrgEnv-gnu from other exercisesm such as Ex-2, or Ex-4. etc.
+module load PrgEnv-nvidia
+module unload cudatoolkit
+module unload gcc
+```
+
+```bash
 cd Ex-3
+make clean
 make
 ```
 It must be noted that in line 5 of `Makefile`, flag `-gpu=cc80` is being passed to `CC`, that is to esnure that CUDA code is built for the devices of compute capability 8.0.
@@ -62,8 +86,13 @@ It must be noted that in line 5 of `Makefile`, flag `-gpu=cc80` is being passed 
 To run:
 
 ```bash
+sbatch batch.sh
+```
+which contains
+```bash
 srun -n4 ./vec_add
 ```
+
 
 Expected output:
 ```bash
@@ -98,15 +127,32 @@ Other 3 GPUs are:
  
  Users can try loading different programming environments i.e. `PrgEnv-nvidia`, `PrgEnv-gnu` and test the sample code by following the below instructions. Make sure that you have the module `cudatoolkit` loaded as that is needed to find the path for `cudart` library.
  
- To build:
+ To build with PrgEnv-nvidia:
  
  ```bash
+ module load PrgEnv-nvidia
+ module load cudatoolkit
  cd Ex-4
+ make clean
+ make
+ ```
+
+ To build with PrgEnv-gnu:
+ 
+ ```bash
+ module load PrgEnv-gnu
+ module load cudatoolkit
+ cd Ex-4
+ make clean
  make
  ```
  
  To run:
  ```bash
+ sbatch batch.sh
+ ```
+ which contains
+ ```
  srun -n4 ./vec_add
  ```
  
@@ -140,16 +186,37 @@ Other 3 GPUs are:
  ## Exercise 5: CUDA +MPI, GPU affinity example.
  Most applications assign one MPI rank per GPU and most of the time it is done using round robin method without considering physical location of the CPU core where the MPI rank is residing with respect to the location of the GPU. In this exercise we will use a simple slurm flag to bind MPI ranks to the GPU located closest to the NUMA region where the MPI rank was scheduled. For this we will use the same code as in Exercise 4 but run it in a different manner. 
  
- First make sure that you have `cudatoolkit` and a `PrgEnv-xx` loaded. Then use the below steps to build the code:
+ First make sure that you have `cudatoolkit` and a `PrgEnv-xx` (either `PrgEnv-nvidia` or `PrgEnv-gnu`) loaded. Then use the below steps to build the code:
  
+ To build with PrgEnv-nvidia:
  ```bash
+ module load PrgEnv-nvidia
+ module load cudatoolkit
  cd Ex-5
+ make clean
+ make
+ ```
+
+ To build with PrgEnv-gnu:
+ ```bash
+ module load PrgEnv-gnu
+ module load cudatoolkit
+ cd Ex-5
+ make clean
  make
  ```
  
  and then to run the example with regular GPU binding, run with:
  
  ```bash
+sbatch batch_reg.sh
+```
+which contains
+```bash
+srun -n8 --cpu-bind=cores ./vec_add
+```
+which contains
+```bash
 srun -n8 --cpu-bind=cores ./vec_add
 ```
 The above will bind MPI ranks to cores and each MPI rank will have all the GPUs visible. In such a scenerio it is not possible to determine the closest GPUs to any of the MPI ranks (cores) hence assignment is in round robin way. The output from above run command can be inspected to see cores to GPU mappings:
@@ -203,6 +270,10 @@ Other 3 GPUs are:
 In order to bind the MPI ranks to the GPUs located closest to the corresponding core (NUMA region), we use the `--gpu-bind=closest` flag, other options for `--gpu-bind` can also be considered to suite each application's need. Rerun the same example using the `--gpu-bind=closest` flag:
 
 ```bash
+sbatch batch_close.sh
+```
+which contains
+```bash
 srun -n8 --cpu-bind=cores --gpu-bind=closest ./vec_add
 ```
 
@@ -236,4 +307,4 @@ Rank 2/8 (PID:74003 on Core: 32) from nid003497 sees 1 GPUs, GPU assigned to me 
 ```
 To view the NUMA regions on current node, use `lscpu | grep NUMA` and observe from the above output that cores in the same NUMA region always view the same GPU. It must be noted that when `--gpu-bind=closest` is used only the closest GPUs are visible to MPI ranks. 
 
-You can also use the sbatch scripts `script_reg.sh` and `script_close.sh` to run the examples without and with GPU bindings. These scripts are located in the same folder (`Ex-5`). 
+You can also use the sbatch scripts `batch_reg.sh` and `batch_close.sh` to run the examples without and with GPU bindings. These scripts are located in the same folder (`Ex-5`). 
